@@ -30,6 +30,14 @@ data "aws_ami" "ubuntu" {
     }
   }
 
+data "aws_vpc" "default" {
+  default = true
+}
+
+data "aws_subnet_ids" "all" {
+  vpc_id = data.aws_vpc.default.id
+}
+
 
   resource "aws_network_interface_sg_attachment" "sg_attachment" {
   security_group_id    = "sg-2c47847f"
@@ -58,7 +66,7 @@ data "aws_ami" "ubuntu" {
   ingress_rules       = ["ssh-tcp"]
 }
 
-  resource "aws_ecr_repository" "ecr-rep" {
+  resource "aws_ecr_repository" "ecr-repo" {
     name                 = "ecr-repo"
     image_tag_mutability = "MUTABLE"
 
@@ -67,7 +75,7 @@ data "aws_ami" "ubuntu" {
     }
   }
 
-  resource "aws_iam_role" "ec2_role_ecr-repo" {
+  resource "aws_iam_role" "ec2_role_ecr_repo" {
     name = "ec2_role_ecr_repo"
 
     assume_role_policy = <<-EOF

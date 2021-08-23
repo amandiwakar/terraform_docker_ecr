@@ -20,14 +20,26 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
   }
 
+
   resource "aws_instance" "web" {
     ami           = data.aws_ami.ubuntu.id
     instance_type = "t2.micro"
     count = 1
     key_name = "docker-ec2"
+
+    iam_instance_profile = aws_iam_instance_profile.ec2_profile_ecr_repo.name
+
     tags = {
-      Name = "HappyDay-${count.index+1}"
+      Name = "HappyDay-${count.index+1}",
+      project = "ecr_repo"
     }
+    monitoring = true
+    disable_api_termination = false
+    ebs_optimized = true
+    root_block_device {
+    volume_size = 8
+    }
+
   }
 
 data "aws_vpc" "default" {
@@ -55,23 +67,13 @@ data "aws_subnet_ids" "all" {
       security_group_id = "sg-2c47847f"
   }
 
-  module "dev_ssh_sg" {
-  source = "terraform-aws-modules/security-group/aws"
-
-  name        = "ec2_sg"
-  description = "Security group for ec2_sg"
-  vpc_id      = data.aws_vpc.default.id
-
-  ingress_cidr_blocks = ["67.161.66.130/32"]
-  ingress_rules       = ["ssh-tcp"]
-}
 
   resource "aws_ecr_repository" "ecr-repo" {
     name                 = "ecr-repo"
     image_tag_mutability = "MUTABLE"
 
     tags = {
-      project = "ecr-repo"
+      project = "ecr_repo"
     }
   }
 
